@@ -25,7 +25,7 @@ const API_TYPE = "openai-completions";
 // 默认模型配置
 const AI_MODEL_ID = "claude-opus-4-5";              // 模型 ID（API 实际使用的名称）
 const AI_MODEL_NAME = "claude-opus-4-5";            // 显示名称（可选）
-const AI_MODEL_PRIMARY = `${API_PROVIDER_NAME}/${AI_MODEL_ID}`;  // 完整引用：altare/qwen3-coder-next
+const AI_MODEL_PRIMARY = `${API_PROVIDER_NAME}/${AI_MODEL_ID}`;  // 完整引用：fucaixie/claude-opus-4-5
 
 // 模型参数（字符串类型，OpenClaw env 要求）
 const AI_MAX_TOKENS = "4096";
