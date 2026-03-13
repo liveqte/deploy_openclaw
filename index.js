@@ -19,13 +19,13 @@ const API_PROVIDER_NAME = "fucaixie";
 // API 端点（用户指定的自定义端点）
 const API_BASE_URL = "https://fucaixie.xyz/v1";
 
-// API 类型：openai-completions / anthropic / google
+// API 类型：openai-completions / openai-chat / anthropic / google
 const API_TYPE = "openai-completions";
 
 // 默认模型配置
 const AI_MODEL_ID = "claude-opus-4-5";              // 模型 ID（API 实际使用的名称）
 const AI_MODEL_NAME = "claude-opus-4-5";            // 显示名称（可选）
-const AI_MODEL_PRIMARY = `${API_PROVIDER_NAME}/${AI_MODEL_ID}`;  // 完整引用：fucaixie/claude-opus-4-5
+const AI_MODEL_PRIMARY = `${API_PROVIDER_NAME}/${AI_MODEL_ID}`;  // 完整引用：altare/qwen3-coder-next
 
 // 模型参数（字符串类型，OpenClaw env 要求）
 const AI_MAX_TOKENS = "4096";
@@ -331,17 +331,43 @@ fs.chmodSync(PENDING_CONFIG_PATH, '600');
 // ============================================================================
 // 🌐 8. Cloudflare Tunnel
 // ============================================================================
+function getCloudflaredArch() {
+  try {
+    const arch = execSync('uname -m', { encoding: 'utf8' }).trim();
+    // 架构映射：返回 cloudflared 文件名中的架构标识
+    const archMap = {
+      'x86_64': 'amd64',
+      'amd64': 'amd64',
+      'aarch64': 'arm64',
+      'arm64': 'arm64',
+      'armv7l': 'arm',
+      'armv6l': 'arm'
+    };
+    return archMap[arch] || 'amd64'; // 默认 fallback 到 amd64
+  } catch (e) {
+    console.warn('⚠️ 无法检测系统架构，默认使用 amd64');
+    return 'amd64';
+  }
+}
 let tunnelChild = null;
 if (finalUseCloudflare) {
   console.log('');
   console.log('☁️  启动 Cloudflare Tunnel...');
   const cfPath = path.join(HOME, 'cloudflared');
   if (!fs.existsSync(cfPath)) {
-    try {
-      execSync('curl -Lo ' + cfPath + ' https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64', { stdio: 'inherit' });
-      execSync('chmod +x ' + cfPath, { stdio: 'inherit' });
-    } catch (e) { console.error('❌ cloudflared 下载失败'); }
-  }
+	  try {
+		const cfArch = getCloudflaredArch();
+		const cfUrl = `https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${cfArch}`;
+		console.log(`📦 下载 cloudflared (架构: ${cfArch})...`);
+		execSync(`curl -Lo ${cfPath} "${cfUrl}"`, { stdio: 'inherit' });
+		execSync('chmod +x ' + cfPath, { stdio: 'inherit' });
+		console.log('✅ cloudflared 下载完成: ' + cfPath);
+	  } catch (e) {
+		console.error('❌ cloudflared 下载失败: ' + e.message);
+		console.error('💡 请手动下载对应架构版本: https://github.com/cloudflare/cloudflared/releases');
+		process.exit(1);
+	  }
+	}
   tunnelChild = spawn(cfPath, ['tunnel', '--url', 'http://localhost:' + finalPort], {
     stdio: 'inherit', env: process.env, shell: false
   });
