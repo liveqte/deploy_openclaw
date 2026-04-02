@@ -248,7 +248,8 @@ const config = {
     port: finalPort,
     controlUi: {
       allowInsecureAuth: finalControlUiAllowInsecure,
-      dangerouslyDisableDeviceAuth: finalControlUiDisableDeviceAuth
+      dangerouslyDisableDeviceAuth: finalControlUiDisableDeviceAuth,
+      allowedOrigins: ["*"],
     },
     auth: { mode: "token", token: finalGatewayToken }
   },
